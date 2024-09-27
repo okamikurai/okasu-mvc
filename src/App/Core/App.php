@@ -34,7 +34,7 @@ class App {
 
         $requestUri = str_replace($subdir, '', $_SERVER['REQUEST_URI']);
 
-        error_log($requestUri);
+        //error_log($requestUri);
 
         /*if($requestUri != '/'){
             @$datauri = explode("/", $_SERVER['REQUEST_URI']);
