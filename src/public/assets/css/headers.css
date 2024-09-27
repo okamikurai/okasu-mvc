@@ -60,13 +60,6 @@ a{
     background-color:rgba(120,40,50,1)!important;
 }
 
-.btn.btn-red {
-    color: #9D2449 !important;
-    background-color: #FFFFFF !important;
-    border: 1px solid #9D2449 !important;
-    box-shadow: 0 0 0 0 #9D2449 !important;
-}
-
 .btn.btn-color {
     background-color: rgba(188, 149, 92, 1);
     color: #fff;
@@ -100,8 +93,8 @@ a{
 }
 
 .btn.btn-outline-red {
-    background: transparent!important;
     border: 1px solid rgba(120,40,50,1) !important;
+    background: transparent!important;
     color: rgba(120,40,50,1) !important; 
 }
 .btn.btn-outline-red:hover {
@@ -116,7 +109,7 @@ a{
 .font-weight-bold {
     font-weight: 700 !important;
 }
-/**/
+
 .bi {
     vertical-align: -.125em;
     fill: currentColor;
@@ -191,7 +184,7 @@ a{
     min-height: 100vh;
     width: 100%;
     height: 100%;
-    display: table;
+    /* display: table; */
     text-align: center;
     color: rgb(220,220,220)!important;
     background: rgba(30,30,30,0.8);

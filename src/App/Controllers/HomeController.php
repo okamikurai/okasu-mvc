@@ -6,7 +6,7 @@ use Sk\App\Core\ShowView;
 class HomeController {
 
     public function home(){
-        $data = ["welcome"=>"Text Welcome"];
+        $data = ["sistema"=>"Sistema de "];
         ShowView::render('Home', $data);
         //require_once __DIR__ . '/../Views/Home.php';
     }
