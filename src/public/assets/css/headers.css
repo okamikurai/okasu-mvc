@@ -1,0 +1,215 @@
+html, body {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+}
+
+body{
+    min-width: 100vw;
+    min-height: 100vh;
+    width: 100vw;
+    height: 100vh;
+}
+
+::-webkit-scrollbar {
+    width: 5px;
+    height: 7px;
+}
+::-webkit-scrollbar-button {
+    width: 0px;
+    height: 0px;
+}
+::-webkit-scrollbar-thumb { 
+    background: #525965;
+    border: 0px none #ffffff;
+    border-radius: 0px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #525965;
+}
+::-webkit-scrollbar-thumb:active {
+    background: #525965;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+    border: 0px none #ffffff;
+    border-radius: 50px;
+}
+::-webkit-scrollbar-track:hover {
+    background: transparent;
+}
+::-webkit-scrollbar-track:active {
+    background: transparent;
+}
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+a{
+    text-decoration: none;
+}
+
+.bg-gmx-gr{
+    --bs-bg-opacity:1;
+    background-color:rgba(12,35,30,1)!important;
+}
+
+.bg-gmx-red{
+    --bs-bg-opacity:1;
+    background-color:rgba(120,40,50,1)!important;
+}
+
+.btn.btn-red {
+    color: #9D2449 !important;
+    background-color: #FFFFFF !important;
+    border: 1px solid #9D2449 !important;
+    box-shadow: 0 0 0 0 #9D2449 !important;
+}
+
+.btn.btn-color {
+    background-color: rgba(188, 149, 92, 1);
+    color: #fff;
+}
+
+.bg-gold {
+    background-color: rgba(188, 149, 92, 1)!important;
+    color: #fff;
+}
+.text-gold {
+    color: rgba(188, 149, 92, 1)!important;
+}
+.border-gold {
+    --bs-border-opacity: 1;
+    border-color: rgba(188, 149, 92, 1)!important;
+}
+
+.btn:hover, .btn:active, .btn:focus {
+    outline: none; 
+}
+
+.btn.btn-red {
+    border: 1px solid rgba(120,40,50,1)!important;
+    background: rgba(120,40,50,1)!important;
+    color: rgba(220,220,220,1)!important; 
+}
+.btn.btn-red:hover {
+    border: 1px solid rgba(120,40,50,1)!important;
+    background: transparent!important;
+    color: rgba(120,40,50,1)!important; 
+}
+
+.btn.btn-outline-red {
+    background: transparent!important;
+    border: 1px solid rgba(120,40,50,1) !important;
+    color: rgba(120,40,50,1) !important; 
+}
+.btn.btn-outline-red:hover {
+    border: 1px solid rgba(120,40,50,1)!important;
+    background: rgba(120,40,50,1) !important;
+    color: rgba(220,220,220,1)!important; 
+}
+
+
+
+/*styles */
+.font-weight-bold {
+    font-weight: 700 !important;
+}
+/**/
+.bi {
+    vertical-align: -.125em;
+    fill: currentColor;
+}
+
+.usercont {
+    padding: 0.5rem;
+    overflow: hidden;
+    width: 350px; min-width: 350px;
+}
+
+.usercont .user-pic {
+    float: left;
+    width: 60px;
+    padding: 2px;
+    border-radius: 12px;
+    margin-right: 15px;
+    overflow: hidden;
+}
+
+.usercont .user-pic img {
+    object-fit: cover;
+    cursor: pointer;
+    height: 100%;
+    width: 100%;
+}
+
+.usercont .user-info {
+    float: left;
+    min-width: 250px;
+    max-width: 255px;
+}
+
+.usercont .user-info > span {
+    display: block;
+}
+
+.usercont .user-info .username {
+    min-width: 10rem;
+    font-size: 11px;
+}
+
+.usercont .user-info .user-role {
+    font-size: 11px;
+}
+
+.usercont .user-info .user-status {
+    font-size: 11px;
+    margin-top: 4px;
+    display: inline;
+}
+
+.usercont .user-info .user-status i {
+    font-size: 8px;
+    margin-right: 4px;
+    color: #5cb85c;
+    display: inline;
+}
+
+.b-divider {
+    flex-shrink: 0;
+    width: 0.5rem;
+    height: 85vh;
+}
+
+.blockscreen {
+    z-index: 9999;
+    position: fixed;
+    left: 0;
+    top: 0;
+    min-width: 100vw;
+    min-height: 100vh;
+    width: 100%;
+    height: 100%;
+    display: table;
+    text-align: center;
+    color: rgb(220,220,220)!important;
+    background: rgba(30,30,30,0.8);
+    display: none;
+}
+.blockscreen .lsmesg{
+    display: table-cell;
+    vertical-align: middle!important;
+}
+
+.upcase{
+    text-transform:uppercase
+}
+
+table.select_wordwrap td, table.select_wordwrap th {
+    word-wrap: break-word;
+}
+
+input.checklg {
+  transform: scale(2);
+}
