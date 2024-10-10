@@ -5,24 +5,24 @@ class Utils {
     public function __construct(){ // Constructor - empty
     }
 
-    public static function dataCrypt($keySa,$data){
+    public static function dataCrypt($keySa, $data){
         $method = 'AES-256-CBC';
         $iv = substr(hash('sha256', $keySa), 0, 16);
         return @openssl_encrypt ($data, $method, $keySa, 0, $iv);
     }
 
-    public static function dataDecrypt($keySa,$data){
+    public static function dataDecrypt($keySa, $data){
         $method = 'AES-256-CBC';
         $iv = substr(hash('sha256', $keySa), 0, 16);
         return @openssl_decrypt($data,$method, $keySa, 0, $iv);
     }
 
-    public static function base64Crypt($keySa,$data){
-        return base64_encode(self::dataCrypt($keySa,$data));
+    public static function base64Crypt($keySa, $data){
+        return base64_encode(self::dataCrypt($keySa, $data));
     }
 
-    public static function base64Decrypt($keySa,$data){
-        return self::dataDecrypt($keySa,base64_decode($data));
+    public static function base64Decrypt($keySa, $data){
+        return self::dataDecrypt($keySa, base64_decode($data));
     }
 
     public static function dFt(string $format = 'Ymd'){

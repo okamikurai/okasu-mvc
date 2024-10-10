@@ -33,9 +33,7 @@ class Router {
                         $this->executeHandler($route['handler']);
                     });
                 } else {
-                    error_log(json_encode($route['handler']));
                     $this->executeHandler($route['handler']);
-                    error_log("Route".$route['handler']);
                 }
                 return;
             }

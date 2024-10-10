@@ -1,6 +1,6 @@
 {
     "name": "okami/okasu-mvc",
-    "description": "Okami Kat Susano MVC Php",
+    "description": "A Little fmwk by Okami Kat Susano MVC Php",
     "type": "project",
     "license": "Apache Licence 2.0",
     "autoload": {
@@ -9,6 +9,8 @@
         }
     },
     "authors": [
+        {"name": "Kat Bastet", "email": "black.bastet@gmail.com"},
+        {"name": "Fernando Redgrave", "email": "ftownshed@gmail.com"},
         {"name": "Okami Kurai", "email": "okami.kurai.ryu@gmail.com"}
     ],
     "require": {
