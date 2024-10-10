@@ -2,13 +2,18 @@
 namespace Sk\App\Controllers;
 
 use Sk\App\Core\ShowView;
+use Sk\App\Core\Utils;
 
 class HomeController {
 
     public function home(){
-        $data = ["sistema"=>"Sistema de "];
+        $login = '/login' . '|' . Utils::dFt();
+        $auth = '/auth' . '|' . Utils::dFt();
+        $loginUrl = Utils::base64Crypt( SYSGLOBALKEY, $login );
+        $authUrl = Utils::base64Crypt( SYSGLOBALKEY, $auth );
+        
+        $data = ["sistema"=>"Sistema de ", "login"=> $loginUrl, "auth"=> $authUrl ];
         ShowView::render('Home', $data);
-        //require_once __DIR__ . '/../Views/Home.php';
     }
 
     public function homeUser(){

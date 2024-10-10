@@ -23,7 +23,7 @@ class ShowView {
     }
 
     public function showview(){
-        $path = realpath(dirname(__FILE__) . DIRECTORY_SEPARATOR . '..'  . DIRECTORY_SEPARATOR . 'views') .DIRECTORY_SEPARATOR;
+        $path = realpath(dirname(__FILE__) . DIRECTORY_SEPARATOR . '..'  . DIRECTORY_SEPARATOR . 'Views') .DIRECTORY_SEPARATOR;
         $fileInclude = $this->fileView . '.php';
         if (file_exists($path . $fileInclude)){
             return include_once $path . $fileInclude;
@@ -33,7 +33,7 @@ class ShowView {
     }
 
     public static function render($fileView = "", $data = array()){
-        $path = realpath(dirname(__FILE__) . DIRECTORY_SEPARATOR . '..'  . DIRECTORY_SEPARATOR . 'views') .DIRECTORY_SEPARATOR;
+        $path = realpath(dirname(__FILE__) . DIRECTORY_SEPARATOR . '..'  . DIRECTORY_SEPARATOR . 'Views') .DIRECTORY_SEPARATOR;
         $fileView = $fileView!='' ? $path . $fileView . ".php" : $path . "Error404.php";
         return require_once $fileView;
     }

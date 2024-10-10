@@ -13,7 +13,8 @@ include_once dirname(__FILE__) . "/Header.php";
                 <div class="col-12 text-center">
                     <h4 class="mb-3">Bienvenido</h4>
                     <h4 class="mb-3"><?=$data["sistema"]?></h4>
-                    <a href="login" class="btn btn-red">Log In</a>
+                    <a href="<?=$data["login"]?>" class="btn btn-red">Login</a>
+                    <a href="<?=$data["auth"]?>" class="btn btn-red">Auth</a>
                 </div>
             </div>
         </div>
