@@ -1,8 +1,7 @@
 <?php
 namespace Sk\App\Core;
 
-class HttpStatus
-{
+class HttpStatus {
     private const STATUS_CODES = [
         100 => 'Continue',
         101 => 'Switching Protocols',
@@ -65,4 +64,3 @@ class HttpStatus
         }
     }
 }
-
