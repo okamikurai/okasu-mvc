@@ -2,7 +2,7 @@
     "name": "okami/okasu-mvc",
     "description": "A Little fmwk by Okami Kat Susano MVC Php",
     "type": "project",
-    "license": "Apache Licence 2.0",
+    "license": "Apache-2.0",
     "autoload": {
         "psr-4": {
             "Sk\\": "src/"

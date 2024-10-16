@@ -1,211 +1,262 @@
 <?php
 namespace Sk\App\Core;
-
+/**
+ ** @author Okami
+ ** Requiere permisos en azure : User.Read.All, ProfilePhoto.Read.All
+ */
 class MsGraph {
-    public $urlMsonline = "https://login.microsoftonline.com/";
-    public $urlMsGraph = "https://graph.microsoft.com/";
-    
-    public function errorHandler($input){
-        $output = "PHP Session ID:    " . session_id() . PHP_EOL;
-        $output .= "Client IP Address: " . getenv("REMOTE_ADDR") . PHP_EOL;
-        $output .= "Client Browser:    " . $_SERVER["HTTP_USER_AGENT"] . PHP_EOL;
-        ob_start();
-        error_log(json_encode($input));
-        $output .= ob_get_contents();
-        ob_end_clean();
-        error_log($output);
-        return false;
+    private $tenantId;
+    private $clientId;
+    private $clientSecret;
+    private $redirectUri;
+    private $tokenUrl;
+    private $authorizationCode;
+    private $accessToken;
+    private $refreshToken;
+    public $urlMsonline = "https://login.microsoftonline.com";
+    public $urlMsGraph = "https://graph.microsoft.com";
+
+    public function __construct($tenantId, $clientId, $clientSecret, $redirectUri ){
+        if (session_status() == PHP_SESSION_NONE) { @session_start(); }
+        $this->tenantId = $tenantId;
+        $this->clientId = $clientId;
+        $this->clientSecret = $clientSecret;
+        $this->redirectUri = $redirectUri;
+        $this->tokenUrl = "{$this->urlMsonline}/{$this->tenantId}/oauth2/v2.0/token";
+        if (isset($_SESSION["AZ"]["authorizationCode"])) {
+            $this->setAutorizationCode($_SESSION["AZ"]["authorizationCode"]);
+        }
+        if (isset($_SESSION["AZ"]["accessToken"])) {
+            $this->setAccessToken($_SESSION["AZ"]["accessToken"]);
+        }
+        if (isset($_SESSION["AZ"]["refreshToken"])) {
+            $this->setRefreshToken($_SESSION["AZ"]["refreshToken"]);
+        }
     }
 
-    public function redirectAuth(){
-        $url = $this->urlMsonline . AZ_AD_TENANT . "/oauth2/v2.0/authorize?";
-        $url .= "state=" . session_id();
-        $url .= "&scope=User.Read";
-        $url .= "&response_type=code";
-        $url .= "&approval_prompt=auto";
-        $url .= "&client_id=" . AZ_CLIENT_ID;
-        $url .= "&redirect_uri=" . urlencode(AZ_REDIRECT_URI);
-        header("Location: " . $url);
+    public function setAutorizationCode($authorizationCode){
+        $this->authorizationCode = $authorizationCode;
+        $_SESSION["AZ"]["authorizationCode"] = $authorizationCode;
     }
 
-    public function getTokenAZ(){
-        $url = $this->urlMsonline . AZ_AD_TENANT . "/oauth2/v2.0/token";
-        $headers = ["Content-Type: application/x-www-form-urlencoded"];
+    public function setAccessToken($accessToken){
+        $this->accessToken = $accessToken;
+        $_SESSION["AZ"]["accessToken"] = $accessToken;
+    }
 
-        $params = "client_id=" . AZ_CLIENT_ID;
-        $params .= "&scope=" . urlencode("https://graph.microsoft.com/.default");
-        $params .= "&client_secret=" . AZ_CLIENT_SECRET;
-        $params .= "&grant_type=client_credentials";
+    public function setRefreshToken($refreshToken){
+        $this->refreshToken = $refreshToken;
+        $_SESSION["AZ"]["refreshToken"] = $refreshToken;
+    }
+
+    public function getAuthorizationUrl(){
+        $postData = http_build_query([
+            'client_id' => $this->clientId,
+            'response_type' => 'code',
+            'response_mode' => 'query',
+            'redirect_uri' => $this->redirectUri,
+            'scope' => 'User.Read',
+            'state' => session_id(),
+            'approval_prompt' => 'auto'
+        ]);
+        return "{$this->urlMsonline}/{$this->tenantId}/oauth2/v2.0/authorize?" . $postData;
+    }
+
+    public function getAccesToken($authorizationCode){
+        $postData = http_build_query([
+            'client_id' => $this->clientId,
+            'client_secret' => $this->clientSecret,
+            'grant_type' => 'authorization_code',
+            'code' => $authorizationCode,
+            'scope' => "{$this->urlMsGraph}/.default offline_access",
+            'redirect_uri' => $this->redirectUri,
+        ]);
+        $headers = ["Content-Type: application/x-www-form-urlencoded", "Content-Length: " . strlen($postData)];
+
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+            CURLOPT_URL => $this->tokenUrl,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $postData,
+            CURLOPT_HTTPHEADER => $headers,
+        ]);
+        $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+        if ($httpCode >= 200 && $httpCode < 300) {
+            $tokenData = json_decode($response, true);
+            if (isset($tokenData["error"])) {
+                throw new \Exception("Bearer token fetch contained an error");
+            }
+            $this->setAccessToken($tokenData['access_token']);
+            $this->setRefreshToken($tokenData['refresh_token']);
+            return $this->accessToken;
+        } else {
+            throw new \Exception("Error al obtener el token. Código HTTP: {$httpCode}");
+        }
+    }
+
+    public function getAccessTokenAZ(){
+        $postData = http_build_query([
+            'client_id' => $this->clientId,
+            'client_secret' => $this->clientSecret,
+            'grant_type' => 'client_credentials',
+            'scope' => "{$this->urlMsGraph}/.default offline_access",
+        ]);
+        $headers = ["Content-Type: application/x-www-form-urlencoded", "Content-Length: " . strlen($postData)];
 
         $curl = curl_init();
         curl_setopt_array($curl, array(
-            CURLOPT_URL => $url,
+            CURLOPT_URL => $this->tokenUrl,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_TIMEOUT => 0,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS => $params,
-            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_POSTFIELDS => $postData,
+            CURLOPT_HTTPHEADER => $headers
         ));
         $response = curl_exec($curl);
-
-        if (curl_errno($curl)) {
-            self::errorHandler(array(
-                "Description" => "Error received during Bearer token fetch.",
-                "PHP_Error" => error_get_last(),
-                "curl ERR" => curl_error($clr)
-            ));
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+        if ($httpCode >= 200 && $httpCode < 300) {
+            $tokenData = json_decode($response, true);
+            if (isset($tokenData["error"])) {
+                throw new \Exception("Bearer token fetch contained an error");
+            }
+            $this->setAccessToken($tokenData['access_token']);
+            $this->refreshToken($tokenData['refresh_token']);
+            return $this->accessToken;
         } else {
-            $ad = json_decode($response, true);
+            throw new \Exception("Error al obtener el token. Código HTTP: $httpCode");
         }
+    }
+
+    private function makeGraphRequest($url, $parseJson = true){
+        $curl = curl_init();
+        @error_log($this->accessToken);
+        curl_setopt_array($curl, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                "Authorization: Bearer " . $this->accessToken,
+                "Content-Type: application/json",
+            ],
+        ]);
+        $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         curl_close($curl);
 
-        if (isset($ad["error"])){
-            self::errorHandler(array("Description" => "Bearer token fetch contained an error.","\$ad[]" => $ad));
-            return false;
-        }
-        return $ad["access_token"];
-    }
-
-    public function codeAuthAZ($code_request){
-        $url = $this->urlMsonline . AZ_AD_TENANT . "/oauth2/v2.0/token";
-        
-        $content = "grant_type=authorization_code&client_id=" . AZ_CLIENT_ID;
-        $content .= "&redirect_uri=" . urlencode(AZ_REDIRECT_URI);
-        $content .= "&code=" . $code_request;
-        $content .= "&client_secret=" . urlencode(AZ_CLIENT_SECRET);
-
-        $headers = ["Content-Type: application/x-www-form-urlencoded","Content-Length: " . strlen($content)];
-        
-        $clr = curl_init($url);
-        curl_setopt($clr, CURLOPT_POST, true);
-        curl_setopt($clr, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($clr, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($clr, CURLOPT_POSTFIELDS, $content);
-        $response = curl_exec($clr);
-
-        if (curl_errno($clr)) {
-            self::errorHandler(array("Description" => "Error received during Bearer token fetch.", "PHP_Error" => error_get_last(), "curl ERR" => curl_error($clr)));
+        if ($httpCode === 200) {
+            return $parseJson ? json_decode($response, true) : $response;
         } else {
-            $authdata = json_decode($response, true);
+            throw new \Exception("Microsoft Graph. Error: {$httpCode}");
         }
-        curl_close($clr);
-
-        if (isset($authdata["error"])){
-            self::errorHandler(array("Description" => "Bearer token fetch contained an error.", "\$authdata[]" => $authdata));
-            return false;
-        }
-        return $authdata;
     }
 
-    public function getUserdataAZ($accessToken){
-        $url = $this->urlMsGraph . "v1.0/me";
-        $headers = ["Accept: application/json","Authorization: Bearer " . $accessToken ];
+    public function renewAccessToken() {
+        $postData = http_build_query([
+            'client_id'     => $this->clientId,
+            'client_secret' => $this->clientSecret,
+            'redirect_uri'  => $this->redirectUri,
+            'grant_type'    => 'refresh_token',
+            'refresh_token' => $this->refreshToken,
+        ]);
 
-        $clr = curl_init($url);
-        curl_setopt($clr, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($clr, CURLOPT_HTTPHEADER, $headers);
-        $response = curl_exec($clr);
-        if (curl_errno($clr)) {
-            error_log('Error en cURL: ' . curl_error($clr));
-            return false;
-        } elseif ($response === false) {
-            error_log("Error en solicitud");
-            return false;
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+            CURLOPT_URL => $this->tokenUrl,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $postData
+        ]);
+        //CURLOPT_HTTPHEADER => $headers,
+        $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+
+        if ($httpCode >= 200 && $httpCode < 300) {
+            $tokenData = json_decode($response, true);
+            if (isset($tokenData['access_token'])) {
+                $this->setAccessToken($tokenData['access_token']);
+                if (isset($tokenData['refresh_token'])) {
+                    $this->setRefreshToken($tokenData['refresh_token']);
+                }
+                return $this->accessToken;
+            }else {
+                throw new Exception('Error al obtener el nuevo access token: ' . $response);
+            }
+        } else {
+            throw new Exception("Error al obtener el token. Código HTTP: $httpCode");
         }
-        
-        $json = json_decode($response, true);
-        curl_close($clr);
-
-        return $json;
-    }
-
-    public function dataUserAzure($email, $accessToken){
-        $url = $this->urlMsGraph . "v1.0/users/" . $email;
-        $headers = ["Accept: application/json","Authorization: Bearer " . $accessToken ];
-
-        $clr = curl_init($url);
-        curl_setopt($clr, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($clr, CURLOPT_HTTPHEADER, $headers);
-        $response = curl_exec($clr);
-        if (curl_errno($clr)) {
-            error_log('Error en cURL: ' . curl_error($clr));
-            return false;
-        } elseif ($response === false) {
-            error_log("Error en la solicitud");
-            return false;
-        }
-        $json = json_decode($response, true);
-        curl_close($clr);
-        return $json;
-    }
-
-    public function getImageUser($userId, $accessToken){
-        $url = $this->urlMsGraph . "v1.0/users/$userId/photo/\$value";
-        $headers = ["Accept: application/json", "Authorization: Bearer " . $accessToken ];
-
-        $clr = curl_init($url);
-        curl_setopt($clr, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($clr, CURLOPT_HTTPHEADER, $headers);
-        $response = curl_exec($clr);
-        $http_status = curl_getinfo($clr, CURLINFO_HTTP_CODE);
-    
-        if($http_status != 200){
-            error_log("Sin imagen");
-            return false;
-        } elseif (curl_errno($clr) || $response === false) {
-            $msgErr = !curl_errno($clr)?"Error en la solicitud":"Error en cURL: ".curl_error($clr);
-            error_log($msgErr);
-            return false;
-        }
-        curl_close($clr);
-        return $response;
     }
 
     public function processAuth($request = []){
         if (!isset($request["code"]) && !isset($request["error"])) {
-            self::redirectAuth();
+            $url = $this->getAuthorizationUrl();
+            header("Location: {$url}");
             exit;
         } elseif (isset($request["error"])) {
-            self::errorHandler(array("Description" => "Error received at the beginning of second stage.", "\$request[]" => $request, "\$_SESSION[]" => $_SESSION));
-            return false;
+            throw new Exception($request["error"]);
         } elseif (strcmp(session_id(), $request["state"]) == 0) {
-            $_SESSION["AZ"]["code"]=$request["code"];
-            $code_request = $request["code"];
-            $authdata = self::codeAuthAZ($code_request);
-            $userdata = self::getUserdataAZ($authdata["access_token"]);
+            $this->setAutorizationCode($request["code"]);
+            $this->accessToken = $this->getAccesToken($this->authorizationCode);
+            $userdata = $this->getMeUserInfo();
+
             if (isset($userdata["error"])) {
-                self::errorHandler(array("Description" => "User data fetch contained an error.", "\$userdata[]" => $userdata, "\$authdata[]" => $authdata, "\$request[]" => $request));
-                return false;
+                throw new \Exception($userdata["error"]);
             }
             return $userdata;
         }
     }
 
-    public function logoutApp(){
+    public function simpleImgProfile(){
+        $im = @imagecreatetruecolor (128, 128) or die ("Cannot Initialize new GD image stream");
+        $bg = imagecolorallocatealpha ($im, 255, 255, 255, 127);
+        $clr = ImageColorAllocate ($im, 0, 73, 153);
+        imagefill($im, 1, 1, $bg);
+        imagefilledellipse($im, 64, 64, 128, 128, $clr);
+        imagesavealpha($im, true);
+        ob_start();
+        imagepng($im);
+        $final_image = ob_get_contents();
+        imagedestroy($im);
+        ob_end_clean();
+        return $final_image;
+    }
+
+    public function getMeUserInfo(){
+        $url = "{$this->urlMsGraph}/v1.0/me";
+        return $this->makeGraphRequest($url);
+    }
+
+    public function getMeUserProfilePhoto(){
+        $url = "{$this->urlMsGraph}/v1.0/me/photo/\$value";
+        return $this->makeGraphRequest($url, false);
+    }
+
+    public function getUserInfo($email){
+        $url = "{$this->urlMsGraph}/v1.0/users/{$email}";
+        return $this->makeGraphRequest($url);
+    }
+
+    public function getUserProfilePhoto($email){
+        $url = "{$this->urlMsGraph}v1.0/users/{$email}/photo/\$value";
+        return $this->makeGraphRequest($url, false);
+    }
+
+    public function logoutApp($logoutUrl){
         @session_start();
         @session_unset();
         @session_destroy();
-        $urlLogout = 'https://login.microsoftonline.com/common/oauth2/v2.0/logout?';
-        $urlLogout.= 'post_logout_redirect_uri=' . urlencode(APP_URL);
-        $urlLogout.= '&client_id=' . AZ_CLIENT_ID;
+
+        $postData = http_build_query([
+            'post_logout_redirect_uri' => $logoutUrl,
+            'client_id' => $this->clientSecret,
+        ]);
+        $urlLogout = 'https://login.microsoftonline.com/common/oauth2/v2.0/logout?' . $postData;
         header("Location: $urlLogout");
-    }
-
-    public static function checkSession(){
-        if (!isset($_SESSION["userData"])) {
-            self::logoutApp();
-            exit(0);
-        }
-        return true;
-    }
-
-    public static function chkSessAs(){
-        if (!isset($_SESSION["userData"])) {
-            return array("error"=>"2","msgErr" =>"No se puede procesar la solicitud recargue la página");
-        }
-        return array("error"=>"0");
     }
 }

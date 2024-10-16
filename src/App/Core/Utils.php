@@ -29,6 +29,15 @@ class Utils {
         return date($format);
     }
 
+    public static function cryptUri($keySa, $uri){
+        return self::base64Crypt($keySa, $uri . '|' .self::dFt());
+    }
+
+    public static function decryptUri($keySa, $uri){
+        $res = self::base64Crypt($keySa, $uri);
+        return explode("|",$res)[0];
+    }
+
     public static function getUserIpAddress() {
         $ip = "";
         $ipArr = [

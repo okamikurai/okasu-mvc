@@ -4,75 +4,102 @@
  */
 namespace Sk\App\Core;
 
-class MicrosoftGraphAuth {
+class BasicMsGraph {
     private $tenantId;
     private $clientId;
     private $clientSecret;
     private $redirectUri;
     private $tokenUrl;
+    private $authorizationCode;
     private $accessToken;
+    private $refreshToken;
+    public $urlMsonline = "https://login.microsoftonline.com";
+    public $urlMsGraph = "https://graph.microsoft.com";
 
-    public function __construct($tenantId, $clientId, $clientSecret, $redirectUri ) {
+    public function __construct($tenantId, $clientId, $clientSecret, $redirectUri ){
+        if (session_status() == PHP_SESSION_NONE) { @session_start(); }
         $this->tenantId = $tenantId;
         $this->clientId = $clientId;
         $this->clientSecret = $clientSecret;
         $this->redirectUri = $redirectUri;
-        $this->tokenUrl = "https://login.microsoftonline.com/{$tenantId}/oauth2/v2.0/token";
+        $this->tokenUrl = "{$this->urlMsonline}/{$this->tenantId}/oauth2/v2.0/token";
+        if (isset($_SESSION["AZ"]["authorizationCode"])) {
+            $this->setAutorizationCode($_SESSION["AZ"]["authorizationCode"]);
+        }
+        if (isset($_SESSION["AZ"]["accessToken"])) {
+            $this->setAccessToken($_SESSION["AZ"]["accessToken"]);
+        }
+        if (isset($_SESSION["AZ"]["refreshToken"])) {
+            $this->setRefreshToken($_SESSION["AZ"]["refreshToken"]);
+        }
+    }
+
+    public function setAutorizationCode($authorizationCode){
+        $this->authorizationCode = $authorizationCode;
+        $_SESSION["AZ"]["authorizationCode"] = $authorizationCode;
+    }
+
+    public function setAccessToken($accessToken){
+        $this->accessToken = $accessToken;
+        $_SESSION["AZ"]["accessToken"] = $accessToken;
+    }
+
+    public function setRefreshToken($refreshToken){
+        $this->refreshToken = $refreshToken;
+        $_SESSION["AZ"]["refreshToken"] = $refreshToken;
     }
 
     public function getAuthorizationUrl(){
-        $params = http_build_query([
+        $postData = http_build_query([
             'client_id' => $this->clientId,
             'response_type' => 'code',
-            'redirect_uri' => $this->redirectUri,
             'response_mode' => 'query',
+            'redirect_uri' => $this->redirectUri,
             'scope' => 'User.Read',
-            'state' => session_id()
+            'state' => session_id(),
+            'approval_prompt' => 'auto'
         ]);
-        return "https://login.microsoftonline.com/{$this->tenantId}/oauth2/v2.0/authorize?" . $params;
+        return "{$this->urlMsonline}/{$this->tenantId}/oauth2/v2.0/authorize?" . $postData;
     }
 
-    // Obtener el token de acceso usando el código de autorización
-    public function getAccessToken($authorizationCode)
-    {
+    public function getAccesToken($authorizationCode){
         $postData = http_build_query([
             'client_id' => $this->clientId,
             'client_secret' => $this->clientSecret,
             'grant_type' => 'authorization_code',
             'code' => $authorizationCode,
+            'scope' => "{$this->urlMsGraph}/.default offline_access",
             'redirect_uri' => $this->redirectUri,
         ]);
+        $headers = ["Content-Type: application/x-www-form-urlencoded", "Content-Length: " . strlen($postData)];
 
         $curl = curl_init();
-
         curl_setopt_array($curl, [
             CURLOPT_URL => $this->tokenUrl,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => $postData,
-            CURLOPT_HTTPHEADER => [
-                "Content-Type: application/x-www-form-urlencoded",
-            ],
+            CURLOPT_HTTPHEADER => $headers,
         ]);
-
         $response = curl_exec($curl);
         $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         curl_close($curl);
-
         if ($httpCode >= 200 && $httpCode < 300) {
             $tokenData = json_decode($response, true);
-            $this->accessToken = $tokenData['access_token'];
+            if (isset($tokenData["error"])) {
+                throw new \Exception("Bearer token fetch contained an error");
+            }
+            $this->setAccessToken($tokenData['access_token']);
+            $this->setRefreshToken($tokenData['refresh_token']);
             return $this->accessToken;
         } else {
-            throw new Exception("Error al obtener el token. Código HTTP: $httpCode");
+            throw new \Exception("Error al obtener el token. Código HTTP: {$httpCode}");
         }
     }
 
-    // Hacer una petición a Microsoft Graph
-    private function makeGraphRequest($url, $parseJson = true)
-    {
+    private function makeGraphRequest($url, $parseJson = true){
         $curl = curl_init();
-
+        @error_log($this->accessToken);
         curl_setopt_array($curl, [
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
@@ -81,7 +108,6 @@ class MicrosoftGraphAuth {
                 "Content-Type: application/json",
             ],
         ]);
-
         $response = curl_exec($curl);
         $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         curl_close($curl);
@@ -89,20 +115,88 @@ class MicrosoftGraphAuth {
         if ($httpCode === 200) {
             return $parseJson ? json_decode($response, true) : $response;
         } else {
-            throw new Exception("Error en la petición a Microsoft Graph. Código HTTP: $httpCode");
+            throw new \Exception("Microsoft Graph. Error: {$httpCode}");
         }
     }
 
-    public function getUserInfo()
-    {
-        $url = "https://graph.microsoft.com/v1.0/me";
+    public function renewAccessToken() {
+        $postData = http_build_query([
+            'client_id'     => $this->clientId,
+            'client_secret' => $this->clientSecret,
+            'redirect_uri'  => $this->redirectUri,
+            'grant_type'    => 'refresh_token',
+            'refresh_token' => $this->refreshToken,
+        ]);
+
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+            CURLOPT_URL => $this->tokenUrl,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $postData
+        ]);
+        //CURLOPT_HTTPHEADER => $headers,
+        $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+
+        if ($httpCode >= 200 && $httpCode < 300) {
+            $tokenData = json_decode($response, true);
+            if (isset($tokenData['access_token'])) {
+                $this->setAccessToken($tokenData['access_token']);
+                if (isset($tokenData['refresh_token'])) {
+                    $this->setRefreshToken($tokenData['refresh_token']);
+                }
+                return $this->accessToken;
+            }else {
+                throw new Exception('Error al obtener el nuevo access token: ' . $response);
+            }
+        } else {
+            throw new Exception("Error al obtener el token. Código HTTP: $httpCode");
+        }
+    }
+
+    public function processAuth($request = []){
+        if (!isset($request["code"]) && !isset($request["error"])) {
+            $url = $this->getAuthorizationUrl();
+            header("Location: {$url}");
+            exit;
+        } elseif (isset($request["error"])) {
+            throw new Exception($request["error"]);
+        } elseif (strcmp(session_id(), $request["state"]) == 0) {
+            $this->setAutorizationCode($request["code"]);
+            $this->accessToken = $this->getAccesToken($this->authorizationCode);
+            $userdata = $this->getMeUserInfo();
+
+            if (isset($userdata["error"])) {
+                throw new \Exception($userdata["error"]);
+            }
+            return $userdata;
+        }
+    }
+
+    public function simpleImgProfile(){
+        $im = @imagecreatetruecolor (128, 128) or die ("Cannot Initialize new GD image stream");
+        $bg = imagecolorallocatealpha ($im, 255, 255, 255, 127);
+        $clr = ImageColorAllocate ($im, 0, 73, 153);
+        imagefill($im, 1, 1, $bg);
+        imagefilledellipse($im, 64, 64, 128, 128, $clr);
+        imagesavealpha($im, true);
+        ob_start();
+        imagepng($im);
+        $final_image = ob_get_contents();
+        imagedestroy($im);
+        ob_end_clean();
+        return $final_image;
+    }
+
+    public function getMeUserInfo(){
+        $url = "{$this->urlMsGraph}/v1.0/me";
         return $this->makeGraphRequest($url);
     }
 
-    // Obtener la foto del perfil del usuario autenticado
-    public function getAuthenticatedUserProfilePhoto()
-    {
-        $url = "https://graph.microsoft.com/v1.0/me/photo/\$value";
-        return $this->makeGraphRequest($url, false);  // La respuesta es binaria (imagen)
+    public function getMeUserProfilePhoto(){
+        $url = "{$this->urlMsGraph}/v1.0/me/photo/\$value";
+        return $this->makeGraphRequest($url, false);
     }
 }
