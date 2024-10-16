@@ -45,7 +45,6 @@ class App {
         if($uri != '/'){
             @$datauri = explode("/", $pathUri);
             @$res = $datauri[1];
-            error_log($res);
             /*if(count($datauri)>=2){
                 @$dataUriPlain = explode("?", $datauri[1]);
                 if(count($dataUriPlain)>1){
