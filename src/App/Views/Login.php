@@ -12,6 +12,7 @@ include_once dirname(__FILE__) . "/Header.php";
             <form class="row g-3">
                 <div class="col-12">
                     <h3 class="m-1">Ingreso al sistema</h4>
+                    <div id="msg" class="alert alert-danger d-flex align-items-center invisible" role="alert" d-></div>
                 </div>
                 <div class="col-12">
                     <label class="form-label" for="usr">Correo electrónico</label>
@@ -22,10 +23,10 @@ include_once dirname(__FILE__) . "/Header.php";
                     <input id="psw" type="password" class="form-control me-5" placeholder="Contraseña" required="">
                 </div>
                 <div class="col-12">
-                    <div class="g-recaptcha" id="grecaptcha" data-sitekey="6LeEZRYnAAAAAGtKUoYCq_uXp0ZTlTlIkk2XIp2i"><div style="width: 304px; height: 78px;"><div><iframe title="reCAPTCHA" width="304" height="78" role="presentation" name="a-ahnzpvm82hzm" frameborder="0" scrolling="no" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-top-navigation allow-modals allow-popups-to-escape-sandbox allow-storage-access-by-user-activation" src="https://www.google.com/recaptcha/api2/anchor?ar=1&amp;k=6LeEZRYnAAAAAGtKUoYCq_uXp0ZTlTlIkk2XIp2i&amp;co=aHR0cHM6Ly9jb25jaWxpYWNpb24uY2VudHJvbGFib3JhbC5nb2IubXg6NDQz&amp;hl=es-419&amp;v=EGbODne6buzpTnWrrBprcfAY&amp;size=normal&amp;cb=3qz2qiaidzt7"></iframe></div><textarea id="g-recaptcha-response" name="g-recaptcha-response" class="g-recaptcha-response" style="width: 250px; height: 40px; border: 1px solid rgb(193, 193, 193); margin: 10px 25px; padding: 0px; resize: none; display: none;"></textarea></div><iframe style="display: none;"></iframe></div>
+                    <div class="g-recaptcha" id="grecaptcha" data-sitekey="6LeEZRYnAAAAAGtKUoYCq_uXp0ZTlTlIkk2XIp2i"></div>
                 </div>
                 <div class="col-12">
-                    <button id="LogIn" type="button" class="form-control btn btn-red">Ingresar</button>
+                    <button id="btnLogIn" type="button" class="form-control btn btn-red">Ingresar</button>
                 </div>
                 <div class="col-12">
                     <p>¿No está registrado?</p>
@@ -38,4 +39,60 @@ include_once dirname(__FILE__) . "/Header.php";
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(e) {
+        const btnLogIn = document.querySelector("#btnLogIn")
+        const msg = document.querySelector("#msg")
+
+        btnLogIn.addEventListener("click", async function(e){
+            e.preventDefault()
+            if (document.querySelector("#usr").value == "" || document.querySelector("#psw").value == "") {
+                msg.innerHTML = "Los datos no pueden ir vacíos";
+                msg.classList.remove("invisible")
+                setTimeout(function() {
+                    msg.classList.add("invisible")
+                }, 2000)
+                return false
+            }
+            document.getElementById('lockscreen').style.display = 'block'
+            const uri = "<?=$data["postUri"]?>"
+
+            const fd = new FormData()
+            fd.append("usr", document.querySelector("#usr").value)
+            fd.append("psw", document.querySelector("#psw").value)
+            const opts = {
+                method: "POST",
+                body: fd
+            }
+            await fetch(uri, opts)
+                .then(async function(res){
+                    document.getElementById('lockscreen').style.display = 'none'
+                    const data = await res.json()
+                    if (data.error>0) {
+                        msg.innerHTML = data.msg;
+                        msg.classList.remove("invisible")
+                        setTimeout(function() {
+                            msg.classList.add("invisible")
+                        }, 2000)
+                    }else {
+                        console.log(data.access)
+                        window.location.href = data.access
+                    }
+                })
+                .catch(function (e) {
+                    console.log("Hubo un problema con la petición" + e.message)
+                    msg.classList.remove("invisible")
+                    setTimeout(function() {
+                        msg.classList.add("invisible")
+                    }, 2000)
+                });
+            
+
+
+            
+
+        })
+    });
+</script>
 <?php include_once dirname(__FILE__) . "/Footer.php"; ?>

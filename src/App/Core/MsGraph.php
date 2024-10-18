@@ -136,7 +136,6 @@ class MsGraph {
 
     private function makeGraphRequest($url, $parseJson = true){
         $curl = curl_init();
-        @error_log($this->accessToken);
         curl_setopt_array($curl, [
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
@@ -204,7 +203,6 @@ class MsGraph {
             $this->setAutorizationCode($request["code"]);
             $this->accessToken = $this->getAccesToken($this->authorizationCode);
             $userdata = $this->getMeUserInfo();
-
             if (isset($userdata["error"])) {
                 throw new \Exception($userdata["error"]);
             }
