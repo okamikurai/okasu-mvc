@@ -33,7 +33,7 @@ class ShowView {
 
     public static function render($fileView = "", $data = array()){
         $path = realpath(dirname(__FILE__) . DIRECTORY_SEPARATOR . '..'  . DIRECTORY_SEPARATOR . 'Views') .DIRECTORY_SEPARATOR;
-        $fileView = $fileView!='' ? $path . $fileView . ".php" : $path . self::error404 . ".php";
+        $fileView = $fileView!='' ? $path . $fileView . ".php" : $path . "error404.php";
         return require_once $fileView;
     }
 

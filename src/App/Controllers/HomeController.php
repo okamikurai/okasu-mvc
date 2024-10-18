@@ -18,7 +18,6 @@ class HomeController {
     public function msHomeUser(){
         $user = new MsUserController();
         $user->checkSession();
-        //$usrData = $user->getMeProfile();
         $usrPict = $user->getMeImgProfile();
         $data = array(
             "userData" => $_SESSION["userData"],
@@ -29,6 +28,9 @@ class HomeController {
     }
 
     public function login(){
-        ShowView::render('Login');
+        $data = array(
+            "postUri" => Utils::cryptUri( SYSGLOBALKEY, '/auth' )
+        );
+        ShowView::render('Login',$data);
     }
 }
