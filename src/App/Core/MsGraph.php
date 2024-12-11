@@ -83,6 +83,7 @@ class MsGraph {
         ]);
         $response = curl_exec($curl);
         $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $errCurl = curl_error($curl);
         curl_close($curl);
         if ($httpCode >= 200 && $httpCode < 300) {
             $tokenData = json_decode($response, true);
@@ -93,7 +94,7 @@ class MsGraph {
             $this->setRefreshToken($tokenData['refresh_token']);
             return $this->accessToken;
         } else {
-            throw new \Exception("Error al obtener el token. Código HTTP: {$httpCode}");
+            throw new \Exception("Error al obtener el token. Código HTTP: {$httpCode} - {$errCurl}");
         }
     }
 
@@ -241,7 +242,7 @@ class MsGraph {
     }
 
     public function getUserProfilePhoto($email){
-        $url = "{$this->urlMsGraph}v1.0/users/{$email}/photo/\$value";
+        $url = "{$this->urlMsGraph}/v1.0/users/{$email}/photo/\$value";
         return $this->makeGraphRequest($url, false);
     }
 

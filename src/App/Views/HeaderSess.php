@@ -1,14 +1,17 @@
 <?php
 namespace Sk\App\Views;
 use Sk\App\Controllers\SidebarController;
+use Sk\App\Controllers\MsUserController;
 
 global $titleHeader;
 global $pathAssets;
 
-$user = $data["userData"];
-$userImage = $data["userImage"];
+$SideBarOpts =SidebarController::getUserMenu($_SESSION["userData"]["idUser"]);
+$usrc = new MsUserController();
+$userProfile = $usrc->getMeProfile(); //$data["userData"];
+$userProfileImage = $usrc->getMeImgProfile();//$data["userImage"];
 
-$SideBarOpts =SidebarController::getUserMenu($user['idUser']);
+
 ?><!doctype html>
 <html lang="es">
 <head>
@@ -36,8 +39,12 @@ $SideBarOpts =SidebarController::getUserMenu($user['idUser']);
     <link rel="stylesheet" href="<?=$pathAssets?>/css/app.css">
 </head>
 <body class="layout-fixed-complete sidebar-expand-lg sidebar-mini bg-body-tertiary app-loaded">
-    <div id="lockscreen" class="blockscreen" style="padding-top: 15%;display: none;">
-        <h2 class="text-light"><i class="fas fa-spinner fa-spin"></i>&nbsp; Cargando ...</h2>
+
+    <div id="lockscreen" class="blockscreen" style="padding-top: 15%; display: none;">
+        <div class="d-flex justify-content-center ">
+            <div class="spinner-border text-light me-3 my-auto" style="width: 5rem; height: 5rem;" ></div>
+            <h2 class="text-light my-auto">Cargando ... </h2>
+        </div>
     </div>
 
     <div class="app-wrapper">

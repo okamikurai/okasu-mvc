@@ -14,15 +14,15 @@
             </li>
             <li class="nav-item dropdown user-menu">
                 <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                    <img src="data:image/jpeg;base64,<?=$userImage?>" class="user-image rounded-circle shadow" alt="">
-                    <span class="d-none d-md-inline"><?=$user["name"]?></span>
+                    <img src="data:image/jpeg;base64,<?=$userProfileImage?>" class="user-image rounded-circle shadow" alt="">
+                    <span class="d-none d-md-inline"><?=$userProfile["name"]?></span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
                     <li class="user-header text-bg-dark">
-                        <img src="data:image/jpeg;base64,<?=$userImage?>" class="rounded-circle shadow" alt="">
+                        <img src="data:image/jpeg;base64,<?=$userProfileImage?>" class="rounded-circle shadow" alt="">
                         <p>
-                            <?=$user["name"]?>
-                            <small><?=$user["mail"]?></small>
+                            <?=$userProfile["name"]?>
+                            <small><?=$userProfile["mail"]?></small>
                         </p>
                     </li>
                     <li class="user-body">
