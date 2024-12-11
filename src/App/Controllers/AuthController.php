@@ -9,7 +9,11 @@ use Sk\App\Core\Utils;
 
 
 class AuthController {
-    public function __construct(){}
+    private $msGraph;
+    
+    public function __construct(){
+        $this->msGraph = new MsGraph(AZ_AD_TENANT, AZ_CLIENT_ID, AZ_CLIENT_SECRET, AZ_REDIRECT_URI);
+    }
 
     public function setSessionData($data){
         @$_SESSION["userData"] = $data;
@@ -47,8 +51,8 @@ class AuthController {
     }
 
     public function authMsGraph(){
-        $msAuth = new MsGraph(AZ_AD_TENANT, AZ_CLIENT_ID, AZ_CLIENT_SECRET, AZ_REDIRECT_URI);
-        $userData = $msAuth->processAuth($_GET);
+        //$this->msGraph = new MsGraph(AZ_AD_TENANT, AZ_CLIENT_ID, AZ_CLIENT_SECRET, AZ_REDIRECT_URI);
+        $userData = $this->msGraph->processAuth($_GET);
         $azureData = array(
             "idAzure" => $userData["id"],
             "mail" => $userData["mail"],
