@@ -28,7 +28,7 @@ class Middleware {
     }
 
     protected function handleInvalidMiddleware(){
-        header('Location: /');
+        header('Location:' . APP_URL);
         exit();
     }
 }
