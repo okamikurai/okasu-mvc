@@ -146,13 +146,14 @@ class MsGraph {
             ],
         ]);
         $response = curl_exec($curl);
+        $errCurl = curl_error($curl);
         $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         curl_close($curl);
 
         if ($httpCode === 200) {
             return $parseJson ? json_decode($response, true) : $response;
         } else {
-            throw new \Exception("Microsoft Graph. Error: {$httpCode}");
+            throw new \Exception("Microsoft Graph. Error: {$httpCode} - {$errCurl}");
         }
     }
 

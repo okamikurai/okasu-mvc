@@ -11,7 +11,7 @@ include_once dirname(__FILE__) . "/Header.php";
         <div class="col-md-6 col-sm-12 order-md-2 order-sm-1 order-1">
             <form class="row g-3">
                 <div class="col-12">
-                    <h3 class="m-1">Ingreso al sistema</h4>
+                    <h3 class="m-1">Ingreso al sistema</h3>
                     <div id="msg" class="alert alert-danger d-flex align-items-center invisible" role="alert" d-></div>
                 </div>
                 <div class="col-12">

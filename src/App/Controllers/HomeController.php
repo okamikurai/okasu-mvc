@@ -31,6 +31,7 @@ class HomeController {
     public function login(){
         $data = array(
             "postUri" => Utils::cryptUri( SYSGLOBALKEY, '/auth' )
+            //"postUri" => Utils::cryptUri( SYSGLOBALKEY, '/authmg' )
         );
         ShowView::render('Login',$data);
     }

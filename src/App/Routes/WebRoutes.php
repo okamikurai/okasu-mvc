@@ -23,6 +23,7 @@ class WebRoutes {
         $router->addRoute('GET', '/auth', [AuthController::class, 'authMsGraph']);
         $router->addRoute('GET', '/logout', [AuthController::class, 'logout']);
         $router->addRoute('POST', '/auth', [AuthController::class, 'authLocal']);
+        $router->addRoute('POST', '/authmg', [AuthController::class, 'authMongo']);
 
         return $router;
     }
